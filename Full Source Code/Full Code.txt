@@ -1,0 +1,359 @@
+import java.util.*;
+
+public class UPTMMarketingOptimization {
+
+    // Cost Matrix
+    static int[][] costMatrix = {
+        {0, 15, 25, 35},
+        {15, 0, 30, 28},
+        {25, 30, 0, 20},
+        {35, 28, 20, 0}
+    };
+
+    static String[] locations = {"UPTM", "City B", "City C", "City D"};
+
+    // =============================================
+    // GREEDY ALGORITHM
+    // =============================================
+    public static String greedyMCOP(int[][] dist) {
+        int n = dist.length;
+        boolean[] visited = new boolean[n];
+        int cost = 0;
+        int current = 0;
+
+        visited[current] = true;
+        String path = locations[current];
+
+        for (int i = 1; i < n; i++) {
+            int next = -1;
+            int min = Integer.MAX_VALUE;
+
+            for (int j = 0; j < n; j++) {
+                if (!visited[j] && dist[current][j] < min) {
+                    min = dist[current][j];
+                    next = j;
+                }
+            }
+
+            visited[next] = true;
+            cost += min;
+            current = next;
+            path += " -> " + locations[current];
+        }
+
+        cost += dist[current][0];
+        path += " -> " + locations[0];
+
+        return "Greedy Route: " + path + " | Total Cost: " + cost;
+    }
+
+    // =============================================
+    // DYNAMIC PROGRAMMING
+    // =============================================
+    static int n = costMatrix.length;
+    static int VISITED_ALL = (1 << n) - 1;
+    static int[][] dp = new int[n][1 << n];
+    static int[][] nextCity = new int[n][1 << n];
+
+    public static String dynamicProgrammingMCOP(int[][] dist) {
+        for (int i = 0; i < n; i++) {
+            Arrays.fill(dp[i], -1);
+            Arrays.fill(nextCity[i], -1);
+        }
+
+        int minCost = tsp(0, 1);
+
+        List<String> route = new ArrayList<>();
+        int mask = 1;
+        int pos = 0;
+        route.add(locations[0]);
+
+        while (true) {
+            int next = nextCity[pos][mask];
+            if (next == -1) break;
+            route.add(locations[next]);
+            mask |= (1 << next);
+            pos = next;
+        }
+
+        route.add(locations[0]);
+
+        return "Dynamic Programming Route: " + String.join(" -> ", route)
+                + " | Total Cost: " + minCost;
+    }
+
+    private static int tsp(int pos, int mask) {
+        if (mask == VISITED_ALL) return costMatrix[pos][0];
+        if (dp[pos][mask] != -1) return dp[pos][mask];
+
+        int minCost = Integer.MAX_VALUE;
+
+        for (int city = 0; city < n; city++) {
+            if ((mask & (1 << city)) == 0) {
+                int cost = costMatrix[pos][city] + tsp(city, mask | (1 << city));
+                if (cost < minCost) {
+                    minCost = cost;
+                    nextCity[pos][mask] = city;
+                }
+            }
+        }
+
+        return dp[pos][mask] = minCost;
+    }
+
+    // =============================================
+    // BACKTRACKING
+    // =============================================
+    static int minCostBT = Integer.MAX_VALUE;
+    static String bestRouteBT = "";
+
+    public static String backtrackingMCOP(int[][] dist) {
+        int size = dist.length;
+        minCostBT = Integer.MAX_VALUE;
+        bestRouteBT = "";
+
+        boolean[] visited = new boolean[size];
+        visited[0] = true;
+
+        backtrack(0, dist, visited, size, 1, 0, locations[0]);
+
+        return "Backtracking Route: " + bestRouteBT + " -> " + locations[0]
+                + " | Total Cost: " + minCostBT;
+    }
+
+    private static void backtrack(int pos, int[][] dist, boolean[] visited,
+                                  int size, int count, int cost, String path) {
+        if (count == size) {
+            int totalCost = cost + dist[pos][0];
+            if (totalCost < minCostBT) {
+                minCostBT = totalCost;
+                bestRouteBT = path;
+            }
+            return;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (!visited[i]) {
+                visited[i] = true;
+                backtrack(i, dist, visited, size, count + 1,
+                        cost + dist[pos][i], path + " -> " + locations[i]);
+                visited[i] = false;
+            }
+        }
+    }
+
+    // =============================================
+    // DIVIDE & CONQUER
+    // =============================================
+    static int minCostDC = Integer.MAX_VALUE;
+    static String bestPathDC = "";
+
+    public static String divideAndConquerMCOP(int[][] dist) {
+        int size = dist.length;
+        minCostDC = Integer.MAX_VALUE;
+        bestPathDC = "";
+
+        boolean[] visited = new boolean[size];
+        visited[0] = true;
+
+        divideAndConquerHelper(0, visited, 1, 0, locations[0], dist, size);
+
+        return "Divide & Conquer Route: " + bestPathDC + " -> " + locations[0]
+                + " | Total Cost: " + minCostDC;
+    }
+
+    private static void divideAndConquerHelper(int pos, boolean[] visited,
+                                               int count, int cost, String path,
+                                               int[][] dist, int size) {
+        if (count == size) {
+            int totalCost = cost + dist[pos][0];
+            if (totalCost < minCostDC) {
+                minCostDC = totalCost;
+                bestPathDC = path;
+            }
+            return;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (!visited[i]) {
+                visited[i] = true;
+                divideAndConquerHelper(i, visited, count + 1,
+                        cost + dist[pos][i], path + " -> " + locations[i],
+                        dist, size);
+                visited[i] = false;
+            }
+        }
+    }
+
+    // =============================================
+    // INSERTION SORT
+    // =============================================
+    public static void insertionSort(int[] arr) {
+        for (int i = 1; i < arr.length; i++) {
+            int key = arr[i];
+            int j = i - 1;
+            while (j >= 0 && arr[j] > key) {
+                arr[j + 1] = arr[j];
+                j--;
+            }
+            arr[j + 1] = key;
+        }
+    }
+
+    // =============================================
+    // BINARY SEARCH
+    // =============================================
+    public static int binarySearch(int[] arr, int target) {
+        int left = 0, right = arr.length - 1;
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            if (arr[mid] == target) return mid;
+            else if (arr[mid] < target) left = mid + 1;
+            else right = mid - 1;
+        }
+        return -1;
+    }
+
+    // =============================================
+    // MIN-HEAP
+    // =============================================
+    static int[] heap = new int[100];
+    static int heapSize = 0;
+
+    public static void heapInsert(int val) {
+        heap[heapSize] = val;
+        int i = heapSize++;
+        while (i > 0) {
+            int parent = (i - 1) / 2;
+            if (heap[parent] > heap[i]) {
+                int tmp = heap[parent];
+                heap[parent] = heap[i];
+                heap[i] = tmp;
+                i = parent;
+            } else break;
+        }
+    }
+
+    public static int heapExtractMin() {
+        int min = heap[0];
+        heap[0] = heap[--heapSize];
+        int i = 0;
+        while (true) {
+            int left = 2 * i + 1, right = 2 * i + 2, smallest = i;
+            if (left < heapSize && heap[left] < heap[smallest]) smallest = left;
+            if (right < heapSize && heap[right] < heap[smallest]) smallest = right;
+            if (smallest == i) break;
+            int tmp = heap[i]; heap[i] = heap[smallest]; heap[smallest] = tmp;
+            i = smallest;
+        }
+        return min;
+    }
+
+    // =============================================
+    // SPLAY TREE
+    // =============================================
+    static int[] splayKey = new int[200];
+    static int[] splayLeft = new int[200];
+    static int[] splayRight = new int[200];
+    static int splayRoot = -1;
+    static int splayCount = 0;
+
+    public static int newNode(int key) {
+        int idx = splayCount++;
+        splayKey[idx] = key;
+        splayLeft[idx] = splayRight[idx] = -1;
+        return idx;
+    }
+
+    public static int rightRotate(int x) {
+        int y = splayLeft[x];
+        splayLeft[x] = splayRight[y];
+        splayRight[y] = x;
+        return y;
+    }
+
+    public static int leftRotate(int x) {
+        int y = splayRight[x];
+        splayRight[x] = splayLeft[y];
+        splayLeft[y] = x;
+        return y;
+    }
+
+    public static int splay(int root, int key) {
+        if (root == -1 || splayKey[root] == key) return root;
+
+        if (key < splayKey[root]) {
+            if (splayLeft[root] == -1) return root;
+            if (key < splayKey[splayLeft[root]]) {
+                splayLeft[splayLeft[root]] = splay(splayLeft[splayLeft[root]], key);
+                root = rightRotate(root);
+            } else if (key > splayKey[splayLeft[root]]) {
+                splayRight[splayLeft[root]] = splay(splayRight[splayLeft[root]], key);
+                if (splayRight[splayLeft[root]] != -1)
+                    splayLeft[root] = leftRotate(splayLeft[root]);
+            }
+            return (splayLeft[root] == -1) ? root : rightRotate(root);
+        } else {
+            if (splayRight[root] == -1) return root;
+            if (key > splayKey[splayRight[root]]) {
+                splayRight[splayRight[root]] = splay(splayRight[splayRight[root]], key);
+                root = leftRotate(root);
+            } else if (key < splayKey[splayRight[root]]) {
+                splayLeft[splayRight[root]] = splay(splayLeft[splayRight[root]], key);
+                if (splayLeft[splayRight[root]] != -1)
+                    splayRight[root] = rightRotate(splayRight[root]);
+            }
+            return (splayRight[root] == -1) ? root : leftRotate(root);
+        }
+    }
+
+    public static void splayInsert(int key) {
+        if (splayRoot == -1) { splayRoot = newNode(key); return; }
+        splayRoot = splay(splayRoot, key);
+        if (splayKey[splayRoot] == key) return;
+        int node = newNode(key);
+        if (key < splayKey[splayRoot]) {
+            splayRight[node] = splayRoot;
+            splayLeft[node] = splayLeft[splayRoot];
+            splayLeft[splayRoot] = -1;
+        } else {
+            splayLeft[node] = splayRoot;
+            splayRight[node] = splayRight[splayRoot];
+            splayRight[splayRoot] = -1;
+        }
+        splayRoot = node;
+    }
+
+    public static boolean splaySearch(int key) {
+        splayRoot = splay(splayRoot, key);
+        return splayRoot != -1 && splayKey[splayRoot] == key;
+    }
+
+    // =============================================
+    // MAIN METHOD
+    // =============================================
+    public static void main(String[] args) {
+
+        // MCOP Algorithms
+        System.out.println(greedyMCOP(costMatrix));
+        System.out.println(dynamicProgrammingMCOP(costMatrix));
+        System.out.println(backtrackingMCOP(costMatrix));
+        System.out.println(divideAndConquerMCOP(costMatrix));
+
+        // Sorting & Searching
+        int[] arr = {8, 3, 5, 1, 9, 2};
+        insertionSort(arr);
+        System.out.println("Sorted Array: " + Arrays.toString(arr));
+        System.out.println("Binary Search (5 found at index): " + binarySearch(arr, 5));
+
+        // Min-Heap
+        int[] heapData = {5, 3, 8, 10, 7};
+        for (int val : heapData) heapInsert(val);
+        System.out.println("Min-Heap Extract Min: " + heapExtractMin());
+
+        // Splay Tree
+        int[] splayData = {10, 5, 20, 3, 15};
+        for (int val : splayData) splayInsert(val);
+        System.out.println("Splay Tree Search (10 found): " + splaySearch(10));
+    }
+}
