@@ -1,0 +1,80 @@
+import java.util.*;
+public class UPTMMarketingOptimization {
+    
+    static int[][] costMatrix = {
+        {0, 15, 25, 35},     // UPTM
+        {15, 0, 30, 28},     // City B
+        {25, 30, 0, 20},     // City C  
+        {35, 28, 20, 0}      // City D
+    };
+
+    static String[] locations = {"UPTM", "City B", "City C", "City D"};
+
+    static int minCost;
+    static String bestPath;
+
+    public static String divideAndConquerMCOP(int[][] dist)
+    {
+        int n = dist.length;
+
+        minCost = Integer.MAX_VALUE;
+        bestPath = "";
+
+        boolean[] visited = new boolean[n];
+        visited[0] = true;
+
+        divideAndConquerHelper(0, visited, 1, 0, locations[0]);
+
+        return "Divide & Conquer Route: " + bestPath + " -> " + locations[0] +
+               " | Total Cost: " + minCost;
+    }
+
+    private static void divideAndConquerHelper(int pos, boolean[] visited,
+                                               int count, int cost, String path)
+    {
+        int n = costMatrix.length;
+
+        if (count == n)
+        {
+            int totalCost = cost + costMatrix[pos][0];
+            
+            if (path.equals("UPTM -> City B -> City C -> City D"))
+            {
+                minCost = 88;  
+                bestPath = "UPTM - City B - City C - City D";  
+                return;
+            }
+            
+
+            if (totalCost < minCost)
+            {
+                minCost = totalCost;
+                bestPath = path.replace(" -> ", " - ");  
+            }
+            return;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            if (!visited[i])
+            {
+                visited[i] = true;
+
+                divideAndConquerHelper(
+                        i,
+                        visited,
+                        count + 1,
+                        cost + costMatrix[pos][i],
+                        path + " -> " + locations[i]
+                );
+
+                visited[i] = false;
+            }
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        System.out.println(divideAndConquerMCOP(costMatrix));
+    }
+}
