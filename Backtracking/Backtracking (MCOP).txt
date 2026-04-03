@@ -1,0 +1,86 @@
+INPUT
+
+import java.util.*;
+
+public class UPTMMarketingOptimization
+{
+    // Cost Matrix
+    static int[][] costMatrix =
+    {
+        {0, 15, 25, 35},
+        {15, 0, 30, 28},
+        {25, 30, 0, 20},
+        {35, 28, 20, 0}
+    };
+
+    // Location names
+    static String[] locations = {"UPTM", "City B", "City C", "City D"};
+
+    // variables to store best solution
+    static int minCost = Integer.MAX_VALUE;
+    static String bestRoute = "";
+
+    // Backtracking MCOP method
+    public static String UPTMMarketingOptimization(int[][] dist)
+    {
+        int n = dist.length;
+
+        // reset values
+        minCost = Integer.MAX_VALUE;
+        bestRoute = "";
+
+        boolean[] visited = new boolean[n];
+        visited[0] = true;
+
+        backtrack(0, dist, visited, n, 1, 0, locations[0]);
+
+        return "Backtracking Route: " + bestRoute + " -> " + locations[0] +
+               " | Total Cost: " + minCost;
+    }
+
+    // recursive backtracking function
+    private static void backtrack(int pos, int[][] dist,
+                                  boolean[] visited, int n,
+                                  int count, int cost, String path)
+    {
+        // if all cities visited
+        if (count == n)
+        {
+            int totalCost = cost + dist[pos][0];
+
+            if (totalCost < minCost)
+            {
+                minCost = totalCost;
+                bestRoute = path;
+            }
+            return;
+        }
+
+        // try visiting every unvisited city
+        for (int i = 0; i < n; i++)
+        {
+            if (!visited[i])
+            {
+                visited[i] = true;
+
+                backtrack(i, dist, visited, n,
+                          count + 1,
+                          cost + dist[pos][i],
+                          path + " -> " + locations[i]);
+
+                // undo choice (backtrack)
+                visited[i] = false;
+            }
+        }
+    }
+
+    // main method
+    public static void main(String[] args)
+    {
+        System.out.println(UPTMMarketingOptimization(costMatrix));
+    }
+}
+
+OUTPUT
+
+Backtracking Route: UPTM -> City B -> City D -> City C -> UPTM | Total Cost: 88
